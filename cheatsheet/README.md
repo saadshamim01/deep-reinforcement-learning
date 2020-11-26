@@ -10,8 +10,4 @@ Other Resources
 
 - [Cheat Sheet](https://github.com/udacity/deep-reinforcement-learning/blob/master/cheatsheet/cheatsheet.pdf)
 
-- [Book](https://s3-us-west-1.amazonaws.com/udacity-drlnd/bookdraft2018.pdf)
-
-- [OpenAI](https://classroom.udacity.com/nanodegrees/nd893/parts/8f607726-757e-4ef5-8b64-f2368755b89a/modules/2175586f-ae62-4a32-b87e-5693a4ec1dd6/lessons/d9e14d9b-32dc-4870-81db-91d424619709/concepts/c65c95be-c50d-460f-b24b-c6d49dfe878c)
-
 - [Optional Resources](https://classroom.udacity.com/nanodegrees/nd893/parts/8f607726-757e-4ef5-8b64-f2368755b89a/modules/2175586f-ae62-4a32-b87e-5693a4ec1dd6/lessons/438a6e83-6b04-4a0f-9a30-4fe6950f9a4f/concepts/c8974789-7cf4-4138-9486-e11640995033)
