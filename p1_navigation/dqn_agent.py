@@ -20,7 +20,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size, seed, fc1_units = 64, fc2_units = 64):
         """Initialize an Agent object.
         
         Params
@@ -28,11 +28,14 @@ class Agent():
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             seed (int): random seed
+            fc1_units (int): fully connected layer 1 size
+            fc2_units (int): fully connected layer 2 size
         """
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
 
+        
         
         
         # Q-Network
