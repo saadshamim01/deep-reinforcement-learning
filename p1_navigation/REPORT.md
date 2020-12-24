@@ -25,14 +25,7 @@ class QNetwork(nn.Module):
         return self.fc3(x)
 ```
 
-The class Agent is is the well-known class implementing the following mechanisms:
-
-**Two Q-Networks (local and target) using the simple neural network.**
-```
-  self.qnetwork_local = QNetwork(state_size, action_size, seed, fc1_units, fc2_units).to(device)
-  self.qnetwork_target = QNetwork(state_size, action_size, seed, fc1_units, fc2_units).to(device)
-```
-**Replay memory (using the class ReplayBuffer)**
+**Replay memory**
 
 ```
 class ReplayBuffer:
@@ -53,160 +46,129 @@ class ReplayBuffer:
         self.batch_size = batch_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
+    
+    def add(self, state, action, reward, next_state, done):
+        """Add a new experience to memory."""
+        e = self.experience(state, action, reward, next_state, done)
+        self.memory.append(e)
+    
+    def sample(self):
+        """Randomly sample a batch of experiences from memory."""
+        experiences = random.sample(self.memory, k=self.batch_size)
+
+        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
+  
+        return (states, actions, rewards, next_states, dones)
 ```
 
-**Epsilon-greedy mechanism**
+###Model Architecture
+
+The model consists of two hidden layers with 64 units each. Every layer is fully connected. State_size is 37 & action_size is 4.
+
+fc1: Maps state_size to fc1_units
+
+fc2: Maps fc1_units to fc2_units
+
+fc3: Maps fc2_units to action_size
+
+
+###Hyperparameters
+
+BUFFER_SIZE = int(1e5)  # replay buffer size
+BATCH_SIZE = 64         # minibatch size
+GAMMA = 0.99            # discount factor
+TAU = 1e-3              # for soft update of target parameters
+LR = 5e-4               # learning rate 
+UPDATE_EVERY = 4        # how often to update the network
+
+
+- max_t: Number of timesteps is set to 1000, if the agent spends more than specified limit, its likely to be stuck.
+
+- eps_start: Epsilon is set to 1. Epsilon decides the exploration vs exploitation behaviour. In the starting we set epsilon to high value because we want to explore and discover various actions and state.
+
+- eps_decay: After each time step we decrease the exploration factor by certain amount, this allows the agent to exploit the state & value pair it has already discover and select the actions which gives highest reward.
+
+- eps_end: We want eps_end to be some minimal value, to have a very small amount of exploration factor.
+
+- BUFFER_SIZE: Number of experiences it can store, it has been set to 100000 experiences, creating random samples and learn from it.
+
+- UPDATE_EVERY: Dictates how many times the network should be updated, it has been set to 4. After every 4 time steps learn from it.
+
+-  GAMMA: Dictates whether the agent focuses on the immediate reward or future rewards. GAMMA = 1: Agent only cares about the future rewards.
+GAMMA = 0: Agent only cares about the immediate reward.
+
+- TAU: Instead of hard update, for soft update: it decided how fast the update of local to target it is, its updates usually give smoother & faster training.
+
+- LR: Decides how big the learning steps is, very high learning step can lead to overshooting. 
+
+###Training 
+
+It took 493 iterations to reach an average score of 13.03
+
+Episode 50	Average Score: 0.344
+
+Episode 100	Average Score: 1.09
+
+Episode 150	Average Score: 2.76
+
+Episode 200	Average Score: 4.89
+
+Episode 250	Average Score: 6.24
+
+Episode 300	Average Score: 7.15
+
+Episode 350	Average Score: 8.39
+
+Episode 400	Average Score: 10.02
+
+Episode 450	Average Score: 11.94
+
+Episode 493	Average Score: 13.03
+
+Environment solved in 493 episodes!	Average Score: 13.03
+
+Time taken to converge is: 637.9585747718811
+
+### Plotting
+
+Plotting has been done using matplot.
+
+![](train.png)
+
+
+###Saving Data
+
+The trained model is saved in saved_weights.pth using the following code.
+
+```      
+#Saving the file
+torch.save(agent.qnetwork_local.state_dict(), 'saved_weights.pth')
 
 ```
-        if random.random() > eps:
-            return np.argmax(action_values.cpu().data.numpy())
-        else:
-            return random.choice(np.arange(self.action_size))
+
+### Loading Data
+
+The trained model is loaded using the following code.
 ```
-
-**Epsilon**
-
-The epsilon become a bit smaller with each episode:
-```
-  eps = max(eps_end, eps_decay*eps)
-```
-where eps_end=0.01, eps_decay = 0.996.
-
-**Loss Function**
-
-Minimize the loss by gradient descend mechanism using the ADAM optimizer
-
-```
- loss = F.mse_loss(Q_expected, Q_targets)
-```
-
----
-
-###Model Q-Network
-
-The code for `QNetwork` is written in PyTorch and implemented in model.py. Q-Network consist is a neural network which contains 3 fully connected layer with 2 layer rectified non linear layers.
-The layers are constructed in the following way:
-
-- Layer fc1 has 64 neurons and it maps state_size x fc1_units
-- Layer fc12 has 64 neurons and it maps fc1_units x fc2_units
-- Layer fc1 has 64 neurons and it maps fc2_units x input parameters
-
-where state_size = 37, action_size = 8, fc1_units and fc2_units are the input parameters.
-
-
-###Training & Testing
-
-We run 5 training sessions with different parameters fc1_units, fc2_units, eps_start, and we save obtained weights by the function of PyTorch:
-```
-file_weights = 'weights_'+str(train_n)+'.trn'
-```
-
-After that we go to the testing session. For each session, we load saved weights by the function of PyTorch as follows:
-
-```
-agent.qnetwork_local.load_state_dict(torch.load(file_weights))
-torch.save(agent.qnetwork_local.state_dict(), 'weights_'+str(train_numb)+'.trn') 
+agent.qnetwork_local.load_state_dict(torch.load('saved_weights.pth'))
 ```
 
 
-Train: 0, Test: 0, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 17.0
+### Testing
 
-Train: 0, Test: 1, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 14.0
+After loading the saved_weights.pth file, we can play the Banana game again.
 
-Train: 0, Test: 2, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 12.0
-
-Train: 0, Test: 3, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 9.0
-
-Train: 0, Test: 4, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 15.0
-
-Train: 0, Test: 5, Episode: 561, fc1_units: 48, fc2_units: 56, eps_start: 0.993, Score: 20.0
-
-       Average Score:  14.5
-=========================================================
-
-
-Train: 1, Test: 0, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 11.0
-
-Train: 1, Test: 1, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 11.0
-
-Train: 1, Test: 2, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 19.0
-
-Train: 1, Test: 3, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 13.0
-
-Train: 1, Test: 4, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 11.0
-
-Train: 1, Test: 5, Episode: 651, fc1_units: 112, fc2_units: 104, eps_start: 0.991, Score: 12.0
-
-       Average Score:  12.833333333333334
-=========================================================
-
-
-Train: 2, Test: 0, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 16.0
-
-Train: 2, Test: 1, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 18.0
-
-Train: 2, Test: 2, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 14.0
-
-Train: 2, Test: 3, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 16.0
-
-Train: 2, Test: 4, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 13.0
-
-Train: 2, Test: 5, Episode: 600, fc1_units: 80, fc2_units: 80, eps_start: 0.991, Score: 16.0
-
-       Average Score:  15.5
-=========================================================
-
-Train: 3, Test: 0, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 20.0
-
-Train: 3, Test: 1, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 10.0
-
-Train: 3, Test: 2, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 19.0
-
-Train: 3, Test: 3, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 11.0
-
-Train: 3, Test: 4, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 16.0
-
-Train: 3, Test: 5, Episode: 525, fc1_units: 64, fc2_units: 56, eps_start: 0.991, Score: 23.0
-
-       Average Score:  16.5
-=========================================================
-
-
-Train: 4, Test: 0, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 7.0
-
-Train: 4, Test: 1, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 17.0
-
-Train: 4, Test: 2, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 14.0
-
-Train: 4, Test: 3, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 18.0
-
-Train: 4, Test: 4, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 8.0
-
-Train: 4, Test: 5, Episode: 572, fc1_units: 64, fc2_units: 56, eps_start: 0.988, Score: 16.0
-
-       Average Score:  13.333333333333334
-=========================================================
-
-
-- Solved Using Local Environment: After running the Deep-Q-Learning, we usually reached the desired average score greater than 13 within 650 epochs. 
-
+Score: 14.0
 
 ###Future ideas
 
-The performance of the Deep-Q-Learning algorithm can be improveed by following ways:
+- We can start by changing the number of layers in the neural network, it took 493 episodes to reach an average score of 13.0. By seeing the graph we can see the score fluctuates a lot.
+- Use of better algorithms like Prioritized Experience Replay, which allows us to prioritize the rare actions and learn from it, which are usually lost in DQL.
+- Changing epsilon and epsilon decay values while training. Even during testing, epsilon value played a large role in deciding the final score.
 
-- Adding one or more non linear (kernel) layers to neural network.
-- Further adjusting fc1_units, fc2_units and epsilon parameters.
-
-
-Q-Learning algorithm are prone to overestimation error, there are other version of Deep-Q-Learning which fix this issue like:
-
-- Dueling Double Deep Neural Network
-- Prioritized Experience Replay
-- Fixed Q-Target
-
-
-The recent achievement
-Open AI group to play Dota 2 using Reinforcement Learning. They have created a bot which beats the world’s top professionals at 1v1 matches of Dota 2 under standard tournament rules. The bot learned the game from scratch by self-play, and does not use imitation learning or tree search. This is a step towards building AI systems which accomplish well-defined goals in messy, complicated situations involving real humans.
 
 

@@ -20,7 +20,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, fc1_units = 64, fc2_units = 64):
+    def __init__(self, state_size=37, action_size=4, seed=1):
         """Initialize an Agent object.
         
         Params
@@ -28,19 +28,14 @@ class Agent():
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             seed (int): random seed
-            fc1_units (int): fully connected layer 1 size
-            fc2_units (int): fully connected layer 2 size
         """
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
 
-        
-        
-        
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size, seed, fc1_units, fc2_units).to(device)
-        self.qnetwork_target = QNetwork(state_size, action_size, seed, fc1_units, fc2_units).to(device)
+        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 
         # Replay memory
@@ -85,7 +80,7 @@ class Agent():
 
         Params
         ======
-            experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples 
+            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples 
             gamma (float): discount factor
         """
         states, actions, rewards, next_states, dones = experiences
