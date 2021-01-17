@@ -60,3 +60,86 @@ You need only select the environment that matches your operating system:
 Then, place the file in the `p3_collab-compet/` folder in the DRLND GitHub repository, and unzip (or decompress) the file.  Next, open `Soccer.ipynb` and follow the instructions to learn how to use the Python API to control the agent.
 
 (_For AWS_) If you'd like to train the agents on AWS (and have not [enabled a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md)), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Soccer/Soccer_Linux_NoVis.zip) to obtain the "headless" version of the environment.  You will **not** be able to watch the agents without enabling a virtual screen, but you will be able to train the agents.  (_To watch the agents, you should follow the instructions to [enable a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md), and then download the environment for the **Linux** operating system above._)
+
+
+
+## Setting up the environment
+
+Follow the instructions to set up the environment: https://github.com/udacity/deep-reinforcement-learning#dependencies
+
+Since I am using Mac, here are the instructions for setup
+
+
+#### Creating Environment
+```
+conda create --name drlnd python=3.6
+
+#To activate the environment
+conda activate drlnd
+```
+
+#### Clone the Deep-Reinforcement Learning repository
+
+```
+#To Clone
+git clone https://github.com/udacity/deep-reinforcement-learning.git
+
+#Go inside the folder and install the necessary packages
+cd deep-reinforcement-learning/python
+pip install .
+```
+
+#### Creating Ipython kernel for the environment (drlnd)
+
+```
+python -m ipykernel install --user --name drlnd --display-name "drlnd"
+```
+
+#### Using terminal open notebook and change the kernel to drlnd
+```
+jupyter notebook
+```
+
+### Environment
+
+Environment is simulated in the Unity application called 'Tennis.app' and it is located in p3_collab-compet folder. The code used to run the simulation:
+```
+env = UnityEnvironment(file_name="Tennis.app")
+```
+
+### Environment Information
+
+```
+INFO:unityagents:
+'Academy' started successfully!
+Unity Academy name: Academy
+        Number of Brains: 1
+        Number of External Brains : 1
+        Lesson number : 0
+        Reset Parameters :
+		
+Unity brain name: TennisBrain
+        Number of Visual Observations (per agent): 0
+        Vector Observation space type: continuous
+        Vector Observation space size (per agent): 8
+        Number of stacked Vector Observation: 3
+        Vector Action space type: continuous
+        Vector Action space size (per agent): 2
+        Vector Action descriptions: ,
+```
+
+```
+Number of agents: 2
+Size of each action: 2
+There are 2 agents. Each observes a state with length: 24
+The state for the first agent looks like: [ 0.          0.          0.          0.          0.          0.
+  0.          0.          0.          0.          0.          0.
+  0.          0.          0.          0.         -6.65278625 -1.5
+ -0.          0.          6.83172083  6.         -0.          0.        ]
+```
+
+
+###Initialization
+In the starting of the project, we start the Unity Simulator and use a equal probability action policy (Random action). At the end of the simulation we see the final score achieved by the agent. 
+
+
